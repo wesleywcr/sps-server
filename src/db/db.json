@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "id": "1b327857-163f-443f-9674-01040029627c",
+      "name": "admin",
+      "email": "admin@spsgroup.com.br",
+      "type": "admin",
+      "password": "1234"
+    }
+  ]
+}
