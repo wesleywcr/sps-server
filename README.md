@@ -71,16 +71,12 @@ sps-server/
    ```
 
 2. **Instale as dependências:**
-
-   ```bash
+ ```bash
   yarn install
    ```
 
 
 3. **Configure as variáveis de ambiente:**
-
-   Copie o arquivo de exemplo e preencha os valores:
-
 
    Edite o `.env` e defina pelo menos `JWT_SECRET` (e opcionalmente `PORT`). Veja a seção [Variáveis de ambiente](#variáveis-de-ambiente).
 
