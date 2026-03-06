@@ -2,6 +2,7 @@ const { AppError } = require('../../common/errors/app-error');
 const userRepository = require('./user.repository');
 
 const VALID_USER_TYPES = ['admin', 'user'];
+const DEFAULT_ADMIN_EMAIL = 'admin@spsgroup.com.br';
 
 function listUsers() {
   const users = userRepository.findAll();
@@ -63,6 +64,14 @@ function editUser(id, data) {
 
 
 function deleteUser(id) {
+  const user = userRepository.findById(id);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  const emailNormalized = (user.email || '').trim().toLowerCase();
+  if (emailNormalized === DEFAULT_ADMIN_EMAIL) {
+    throw new AppError('Cannot delete the default admin account', 403);
+  }
   const deleted = userRepository.remove(id);
   if (!deleted) {
     throw new AppError('User not found', 404);
