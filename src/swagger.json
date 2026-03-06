@@ -1,0 +1,564 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "SPS Server API",
+    "version": "1.0.0",
+    "description": "Documentação da API do servidor SPS. Inclui autenticação (login) e gerenciamento de usuários (listagem, cadastro, edição, alteração de senha e exclusão).",
+    "contact": {
+      "name": "SPS",
+      "email": "contato@spsgroup.com.br"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3333",
+      "description": "Servidor de desenvolvimento"
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Operações de autenticação" },
+    { "name": "User", "description": "Gerenciamento de usuários" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT retornado por POST /signin. Enviar no cabeçalho: Authorization: Bearer <token>."
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "description": "Representação de um usuário (sem senha).",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identificador único do usuário.",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-mail do usuário.",
+            "example": "usuario@exemplo.com.br"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do usuário.",
+            "example": "João Silva"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["admin", "user"],
+            "description": "Papel do usuário: admin ou user."
+          }
+        },
+        "required": ["id", "email", "name", "type"]
+      },
+      "UserInput": {
+        "type": "object",
+        "description": "Dados para cadastro de novo usuário.",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-mail do usuário.",
+            "example": "novo@exemplo.com.br"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do usuário.",
+            "example": "Maria Santos"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["admin", "user"],
+            "description": "Papel do usuário."
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 1,
+            "description": "Senha do usuário."
+          }
+        },
+        "required": ["email", "name", "type", "password"]
+      },
+      "UserUpdateInput": {
+        "type": "object",
+        "description": "Dados parciais para atualização de usuário (todos opcionais).",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Novo e-mail."
+          },
+          "name": {
+            "type": "string",
+            "description": "Novo nome."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["admin", "user"],
+            "description": "Novo papel."
+          }
+        }
+      },
+      "PasswordChangeInput": {
+        "type": "object",
+        "description": "Corpo da requisição para alteração de senha.",
+        "properties": {
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 1,
+            "description": "Nova senha."
+          }
+        },
+        "required": ["password"]
+      },
+      "SignInRequest": {
+        "type": "object",
+        "description": "Credenciais para login.",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-mail do usuário.",
+            "example": "usuario@exemplo.com.br"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Senha do usuário."
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "SignInResponse": {
+        "type": "object",
+        "description": "Resposta do login: dados do usuário e token JWT.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Identificador único do usuário."
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome do usuário."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-mail do usuário."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["admin", "user"],
+            "description": "Papel do usuário."
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "Token JWT para uso no cabeçalho Authorization."
+          }
+        },
+        "required": ["id", "name", "email", "type", "accessToken"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Resposta de erro da API.",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensagem de erro."
+          }
+        },
+        "required": ["message"]
+      },
+      "PasswordUpdatedMessage": {
+        "type": "object",
+        "description": "Resposta de sucesso da alteração de senha.",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Password updated successfully"
+          }
+        },
+        "required": ["message"]
+      }
+    }
+  },
+  "paths": {
+    "/signin": {
+      "post": {
+        "operationId": "signIn",
+        "summary": "Login",
+        "description": "Autentica com e-mail e senha. Retorna os dados do usuário e um token JWT para uso no cabeçalho Authorization nas demais rotas.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignInRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SignInResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "E-mail e senha são obrigatórios.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "operationId": "listUsers",
+        "summary": "Listar usuários",
+        "description": "Retorna todos os usuários. Requer token JWT válido.",
+        "tags": ["User"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Lista de usuários.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/User" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado (token ausente ou inválido).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerUser",
+        "summary": "Cadastrar usuário",
+        "description": "Cria um novo usuário. Requer token JWT e perfil de administrador.",
+        "tags": ["User"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "400": {
+            "description": "Campos obrigatórios ausentes: email, name, type, password.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado (token ausente ou inválido).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado (apenas administradores podem cadastrar usuários).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "E-mail já em uso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/{id}": {
+      "get": {
+        "operationId": "getUserById",
+        "summary": "Buscar usuário por ID",
+        "description": "Retorna um usuário pelo identificador. Requer token JWT válido.",
+        "tags": ["User"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Identificador único do usuário (UUID)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do usuário.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado (token ausente ou inválido).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "editUser",
+        "summary": "Editar usuário",
+        "description": "Atualiza um usuário existente pelo ID. Corpo pode ser parcial. Requer token JWT; apenas o próprio usuário ou administrador podem editar.",
+        "tags": ["User"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Identificador único do usuário (UUID)."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdateInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário atualizado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/User" }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado (token ausente ou inválido).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado (apenas o próprio usuário ou administrador podem editar).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "E-mail já em uso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteUser",
+        "summary": "Excluir usuário",
+        "description": "Exclui um usuário pelo ID. Requer token JWT; apenas o próprio usuário ou administrador podem excluir.",
+        "tags": ["User"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Identificador único do usuário (UUID)."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usuário excluído."
+          },
+          "401": {
+            "description": "Não autorizado (token ausente ou inválido).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado (apenas o próprio usuário ou administrador podem excluir).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/{id}/password": {
+      "patch": {
+        "operationId": "changePassword",
+        "summary": "Alterar senha",
+        "description": "Atualiza a senha de um usuário pelo ID. Requer token JWT; apenas o próprio usuário ou administrador podem alterar.",
+        "tags": ["User"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Identificador único do usuário (UUID)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PasswordChangeInput" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Senha alterada com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PasswordUpdatedMessage" }
+              }
+            }
+          },
+          "400": {
+            "description": "Nova senha é obrigatória.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado (token ausente ou inválido).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado (apenas o próprio usuário ou administrador podem alterar a senha).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuário não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
