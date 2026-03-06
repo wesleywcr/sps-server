@@ -1,0 +1,52 @@
+###
+@BASE_URL=http://localhost:3333
+@token = {{login.response.body.$.accessToken}}
+###
+# @name login
+POST {{BASE_URL}}/signin
+Content-Type: application/json
+
+{
+  "email": "admin@spsgroup.com.br",
+  "password": "1234"
+}
+
+###
+
+###
+GET {{BASE_URL}}/user
+Content-Type: application/json
+Authorization: Bearer {{token}}
+###
+
+###
+GET {{BASE_URL}}/user/46279467-bb43-437c-b068-0e468e2f2a68
+Content-Type: application/json
+Authorization: Bearer {{token}}
+###
+POST {{BASE_URL}}/user
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "wesley@test.com",
+  "name": "Wesley",
+  "type": "user",
+  "password": "123456"
+}
+
+
+###
+PATCH  {{BASE_URL}}/user/9d0e845d-77d8-47d3-9c63-01d9c0b54ab9
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "wesley@test.com",
+  "name": "Wesley3",
+  "type": "user"
+}
+###
+DELETE {{BASE_URL}}/user/4d32c709-738f-435d-a9e4-145844fe239d
+Content-Type: application/json
+Authorization: Bearer {{token}}
