@@ -3,10 +3,19 @@ const userRepository = require('./user.repository');
 
 const VALID_USER_TYPES = ['admin', 'user'];
 const DEFAULT_ADMIN_EMAIL = 'admin@spsgroup.com.br';
+const DEFAULT_PER_PAGE = 10;
+const MAX_PER_PAGE = 100;
 
-function listUsers() {
+function listUsers({ page = 1, perPage = DEFAULT_PER_PAGE } = {}) {
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const perPageNum = Math.min(MAX_PER_PAGE, Math.max(1, parseInt(perPage, 10) || DEFAULT_PER_PAGE));
   const users = userRepository.findAll();
-  return users.map(cleaningReturnUser);
+  const cleaned = users.map(cleaningReturnUser);
+  const total = cleaned.length;
+  const start = (pageNum - 1) * perPageNum;
+  const end = start + perPageNum;
+  const data = cleaned.slice(start, end);
+  return { total, page: pageNum, perPage: perPageNum,data  };
 }
 
 function getUserById(id) {

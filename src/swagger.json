@@ -5,8 +5,7 @@
     "version": "1.0.0",
     "description": "Documentação da API do servidor SPS. Inclui autenticação (login) e gerenciamento de usuários (listagem, cadastro, edição, alteração de senha e exclusão).",
     "contact": {
-      "name": "SPS",
-      "email": "contato@spsgroup.com.br"
+      "name": "SPS"
     }
   },
   "servers": [
@@ -57,6 +56,30 @@
           }
         },
         "required": ["id", "email", "name", "type"]
+      },
+      "PaginatedUsers": {
+        "type": "object",
+        "description": "Resposta paginada da listagem de usuários.",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/User" },
+            "description": "Usuários da página atual."
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total de usuários (todas as páginas)."
+          },
+          "page": {
+            "type": "integer",
+            "description": "Página atual (1-based)."
+          },
+          "perPage": {
+            "type": "integer",
+            "description": "Quantidade de itens por página."
+          }
+        },
+        "required": ["data", "total", "page", "perPage"]
       },
       "UserInput": {
         "type": "object",
@@ -239,18 +262,31 @@
       "get": {
         "operationId": "listUsers",
         "summary": "Listar usuários",
-        "description": "Retorna todos os usuários. Requer token JWT válido.",
+        "description": "Retorna usuários com paginação. Requer token JWT válido.",
         "tags": ["User"],
         "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 1, "minimum": 1 },
+            "description": "Página (1-based)."
+          },
+          {
+            "name": "perPage",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 100 },
+            "description": "Itens por página (máximo 100)."
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Lista de usuários.",
+            "description": "Lista paginada de usuários.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/User" }
-                }
+                "schema": { "$ref": "#/components/schemas/PaginatedUsers" }
               }
             }
           },

@@ -8,8 +8,10 @@ function registerUser(req, res) {
 
 
 function listUsers(req, res) {
-  const users = userService.listUsers();
-  res.json(users);
+  const page = req.query.page;
+  const perPage = req.query.perPage;
+  const result = userService.listUsers({ page, perPage });
+  res.json(result);
 }
 
 function getUserById(req, res) {
