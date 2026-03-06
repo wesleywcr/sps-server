@@ -126,7 +126,6 @@ sps-server/
 
 | Método | Rota   | Descrição        |
 |--------|--------|------------------|
-| GET    | `/`    | Mensagem de teste ("Hello World!") |
 | GET    | `/docs`| Documentação Swagger UI |
 
 ---
