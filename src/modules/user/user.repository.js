@@ -52,10 +52,19 @@ function update(id, data) {
   if (data.email !== undefined) user.email = data.email.trim().toLowerCase();
   if (data.name !== undefined) user.name = data.name.trim();
   if (data.type !== undefined) user.type = data.type;
-  if (data.password !== undefined) user.password = data.password;
   users[index] = user;
   writeDb(db);
   return user;
+}
+
+function updatePassword(id, newPassword) {
+  const db = readDb();
+  const users = db.users ?? [];
+  const index = users.findIndex((u) => u.id === id);
+  if (index === -1) return undefined;
+  users[index].password = newPassword;
+  writeDb(db);
+  return users[index];
 }
 
 function remove(id) {
@@ -74,5 +83,6 @@ module.exports = {
   findByEmail,
   create,
   update,
+  updatePassword,
   remove,
 };

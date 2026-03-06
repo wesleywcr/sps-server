@@ -1,41 +1,51 @@
 const { AppError } = require('../../common/errors/app-error');
 const userRepository = require('./user.repository');
 
+const VALID_USER_TYPES = ['admin', 'user'];
 
 function listUsers() {
   const users = userRepository.findAll();
   return users.map(cleaningReturnUser);
 }
 
+function getUserById(id) {
+  const user = userRepository.findById(id);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  return cleaningReturnUser(user);
+}
 
 function registerUser(data) {
   const email = (data.email || '').trim().toLowerCase();
+  if (!email || !data.name || !data.type || !data.password) {
+    throw new AppError('Missing required fields: email, name, type, password', 400);
+  }
+  if (!VALID_USER_TYPES.includes(data.type)) {
+    throw new AppError('Invalid type. Allowed values: admin, user', 400);
+  }
   const existing = userRepository.findByEmail(email);
+  if (existing) {
+    throw new AppError('Email already in use', 409);
+  }
   const user = userRepository.create({
     email: data.email.trim(),
     name: data.name.trim(),
     type: data.type,
     password: data.password,
   });
-
-  if (!email || !data.name || !data.type || !data.password) {
-    throw new AppError('Missing required fields: email, name, type, password', 400);
-  }
- 
-  if (existing) {
-    throw new AppError('Email already in use', 409);
-  }
- 
   return cleaningReturnUser(user);
 }
 
 
 function editUser(id, data) {
+
   const user = userRepository.findById(id);
-  const updated = userRepository.update(id, data);
-  
   if (!user) {
     throw new AppError('User not found', 404);
+  }
+  if (data.type !== undefined && !VALID_USER_TYPES.includes(data.type)) {
+    throw new AppError('Invalid type. Allowed values: admin, user', 400);
   }
   if (data.email !== undefined) {
     const email = data.email.trim().toLowerCase();
@@ -44,7 +54,7 @@ function editUser(id, data) {
       throw new AppError('Email already in use', 409);
     }
   }
-
+  const updated = userRepository.update(id, data);
   if (!updated) {
     throw new AppError('User not found', 404);
   }
@@ -59,6 +69,16 @@ function deleteUser(id) {
   }
 }
 
+function changePassword(id, newPassword) {
+  const trimmed = typeof newPassword === 'string' ? newPassword.trim() : '';
+  if (!trimmed) {
+    throw new AppError('New password is required', 400);
+  }
+  const updated = userRepository.updatePassword(id, trimmed);
+  if (!updated) {
+    throw new AppError('User not found', 404);
+  }
+}
 
 function cleaningReturnUser(user) {
   return {
@@ -71,7 +91,9 @@ function cleaningReturnUser(user) {
 
 module.exports = {
   listUsers,
+  getUserById,
   registerUser,
   editUser,
   deleteUser,
+  changePassword,
 };

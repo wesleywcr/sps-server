@@ -12,6 +12,10 @@ function listUsers(req, res) {
   res.json(users);
 }
 
+function getUserById(req, res) {
+  const user = userService.getUserById(req.params.id);
+  res.json(user);
+}
 
 function editUser(req, res) {
   const user = userService.editUser(req.params.id, req.body);
@@ -24,9 +28,16 @@ function deleteUser(req, res) {
   res.status(204).send();
 }
 
+function changePassword(req, res) {
+  userService.changePassword(req.params.id, req.body.password);
+  res.status(200).json({ message: 'Password updated successfully' });
+}
+
 module.exports = {
   listUsers,
+  getUserById,
   registerUser,
   editUser,
   deleteUser,
+  changePassword,
 };
