@@ -8,7 +8,7 @@ function signIn(email, password) {
   const normalizedEmail = (email || '').trim().toLowerCase();
   const user = userRepository.findByEmail(normalizedEmail);
   const secret = process.env.JWT_SECRET;
-  const payload = { id: user.id, email: user.email, type: user.type };
+  const payload = { id: user.id, email: user.email, name: user.name, type: user.type };
   const accessToken = jwt.sign(payload, secret, { expiresIn: '7d' });
 
   if (!normalizedEmail || !password) {
@@ -23,7 +23,7 @@ function signIn(email, password) {
     throw new AppError('Server configuration error', 500);
   }
 
-  return { accessToken };
+  return { accessToken,payload };
 }
 
 module.exports = { signIn };
