@@ -5,7 +5,8 @@
       "name": "admin",
       "email": "admin@spsgroup.com.br",
       "type": "admin",
-      "password": "1234"
+      "password": "1234",
+      "avatar": "http://localhost:3333/uploads/1773972013388.png"
     }
   ]
 }

@@ -76,6 +76,16 @@ function remove(id) {
   if (removed) writeDb(db);
   return removed;
 }
+function uploadAvatar(id, avatar) {
+  const db = readDb();
+  const users = db.users ?? [];
+ const index = users.findIndex((u) => u.id === id);
+  if (index === -1) return undefined;
+  const pathAvatar = `http://localhost:3333/${avatar.path}`
+  users[index].avatar = pathAvatar;
+  writeDb(db);
+  return true;
+}
 
 module.exports = {
   findAll,
@@ -85,4 +95,5 @@ module.exports = {
   update,
   updatePassword,
   remove,
+  uploadAvatar,
 };

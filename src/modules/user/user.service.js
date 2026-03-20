@@ -97,7 +97,20 @@ function changePassword(id, newPassword) {
     throw new AppError('User not found', 404);
   }
 }
+function uploadAvatar(id, avatar) {
+  const user = userRepository.findById(id);
 
+  if (!avatar) {
+    return res.status(400).json({ error: 'No avatar' });
+  }
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+  const updated = userRepository.uploadAvatar(id, avatar);
+  if (!updated) {
+    throw new AppError('User not found', 404);
+  }
+}
 function cleaningReturnUser(user) {
   return {
     id: user.id,
@@ -107,6 +120,7 @@ function cleaningReturnUser(user) {
   };
 }
 
+
 module.exports = {
   listUsers,
   getUserById,
@@ -114,4 +128,5 @@ module.exports = {
   editUser,
   deleteUser,
   changePassword,
+  uploadAvatar
 };

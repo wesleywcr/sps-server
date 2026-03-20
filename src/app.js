@@ -9,17 +9,17 @@ const swaggerDocument = require('./swagger.json');
 
 function createApp() {
   const app = express();
-
   app.use(cors());
   app.use(express.json());
   app.use(authModule);
-  
+
   app.get("/", (req, res) => {
     res.send("Hello World!");
   });
   app.use('/user', userModule);
+  app.use('/uploads', express.static('uploads'));
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-  
+
   app.use((err, req, res, _next) => {
     if (err instanceof AppError) {
       return res.status(err.statusCode).json({ message: err.message });
@@ -35,5 +35,6 @@ function createApp() {
   });
   return app;
 }
+
 
 module.exports = { createApp };

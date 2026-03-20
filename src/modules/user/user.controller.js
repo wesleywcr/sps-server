@@ -35,6 +35,11 @@ function changePassword(req, res) {
   res.status(200).json({ message: 'Password updated successfully' });
 }
 
+function uploadAvatar(req, res) {
+  userService.uploadAvatar(req.params.id, req.file);
+  res.status(200).json({ message: 'Avatar updated successfully' });
+}
+
 module.exports = {
   listUsers,
   getUserById,
@@ -42,4 +47,5 @@ module.exports = {
   editUser,
   deleteUser,
   changePassword,
+  uploadAvatar,
 };
