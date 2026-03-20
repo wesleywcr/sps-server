@@ -35,9 +35,12 @@ function changePassword(req, res) {
   res.status(200).json({ message: 'Password updated successfully' });
 }
 
-function uploadAvatar(req, res) {
-  userService.uploadAvatar(req.params.id, req.file);
-  res.status(200).json({ message: 'Avatar updated successfully' });
+async function uploadAvatar(req, res) {
+  const pathAvatar =await userService.uploadAvatar(req.params.id, req.file);
+  res.status(200).json({ 
+    message: 'Avatar updated successfully',
+    avatar:  String(pathAvatar)
+  });
 }
 
 module.exports = {

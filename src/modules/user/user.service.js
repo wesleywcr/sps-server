@@ -97,7 +97,7 @@ function changePassword(id, newPassword) {
     throw new AppError('User not found', 404);
   }
 }
-function uploadAvatar(id, avatar) {
+async function uploadAvatar(id, avatar) {
   const user = userRepository.findById(id);
 
   if (!avatar) {
@@ -106,10 +106,12 @@ function uploadAvatar(id, avatar) {
   if (!user) {
     throw new AppError('User not found', 404);
   }
-  const updated = userRepository.uploadAvatar(id, avatar);
+  const updated = await userRepository.uploadAvatar(id, avatar);
   if (!updated) {
     throw new AppError('User not found', 404);
   }
+
+  return updated;
 }
 function cleaningReturnUser(user) {
   return {

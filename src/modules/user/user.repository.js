@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const DB_PATH = path.join(__dirname, '../../db/db.json');
+const uploadDir = path.resolve('uploads');
+
 
 function readDb() {
   const raw = fs.readFileSync(DB_PATH, 'utf-8');
@@ -76,15 +78,31 @@ function remove(id) {
   if (removed) writeDb(db);
   return removed;
 }
-function uploadAvatar(id, avatar) {
+async function uploadAvatar(id, avatar) {
   const db = readDb();
   const users = db.users ?? [];
- const index = users.findIndex((u) => u.id === id);
+  const index = users.findIndex((u) => u.id === id);
   if (index === -1) return undefined;
+
+  const existingUser = users[index];
+  const oldAvatar = existingUser?.avatar || null;
   const pathAvatar = `http://localhost:3333/${avatar.path}`
-  users[index].avatar = pathAvatar;
+  
+  existingUser.avatar = pathAvatar;
   writeDb(db);
-  return true;
+  if (oldAvatar && oldAvatar.includes('/uploads/')) {
+    const oldFileName = oldAvatar.split('/uploads/')[1];
+
+    if (oldFileName && oldFileName.length > 0) {
+      const oldFilePath = path.join(uploadDir, oldFileName);
+      fs.unlink(oldFilePath, (err) => {
+        if (err) throw err;
+        console.warn('File deleted');
+      });
+    }
+  }
+
+  return pathAvatar;
 }
 
 module.exports = {
