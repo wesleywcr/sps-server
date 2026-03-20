@@ -26,11 +26,15 @@ function getUserById(id) {
   return cleaningReturnUser(user);
 }
 
-function registerUser(data) {
+function registerUser(data,avatar) {
   const email = (data.email || '').trim().toLowerCase();
   if (!email || !data.name || !data.type || !data.password) {
     throw new AppError('Missing required fields: email, name, type, password', 400);
   }
+  if (!avatar) {
+      throw new AppError('No avatar', 400);
+  }
+  
   if (!VALID_USER_TYPES.includes(data.type)) {
     throw new AppError('Invalid type. Allowed values: admin, user', 400);
   }
@@ -38,12 +42,14 @@ function registerUser(data) {
   if (existing) {
     throw new AppError('Email already in use', 409);
   }
+
   const user = userRepository.create({
     email: data.email.trim(),
     name: data.name.trim(),
     type: data.type,
     password: data.password,
-  });
+  },  avatar);
+  
   return cleaningReturnUser(user);
 }
 
@@ -68,6 +74,7 @@ function editUser(id, data) {
   if (!updated) {
     throw new AppError('User not found', 404);
   }
+  
   return cleaningReturnUser(updated);
 }
 
@@ -101,10 +108,8 @@ async function uploadAvatar(id, avatar) {
   const user = userRepository.findById(id);
 
   if (!avatar) {
-    return res.status(400).json({ error: 'No avatar' });
-  }
-  if (!user) {
-    throw new AppError('User not found', 404);
+     throw new AppError('No avatar', 400);
+
   }
   const updated = await userRepository.uploadAvatar(id, avatar);
   if (!updated) {
@@ -119,6 +124,7 @@ function cleaningReturnUser(user) {
     email: user.email,
     name: user.name,
     type: user.type,
+    avatar: user.avatar,
   };
 }
 

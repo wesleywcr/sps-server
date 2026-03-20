@@ -29,7 +29,7 @@ function findByEmail(email) {
   return findAll().find((u) => u.email.toLowerCase() === normalized);
 }
 
-function create(data) {
+async function create(data, avatar) {
   const id = crypto.randomUUID();
   const user = {
     id,
@@ -37,11 +37,16 @@ function create(data) {
     name: data.name.trim(),
     type: data.type,
     password: data.password,
+    avatar: "",
   };
   const db = readDb();
   if (!db.users) db.users = [];
   db.users.push(user);
+
+  const pathAvatar = await uploadAvatar(user.id, avatar);
+  db.users[db.users.length - 1].avatar = pathAvatar;
   writeDb(db);
+
   return user;
 }
 
@@ -87,7 +92,7 @@ async function uploadAvatar(id, avatar) {
   const existingUser = users[index];
   const oldAvatar = existingUser?.avatar || null;
   const pathAvatar = `http://localhost:3333/${avatar.path}`
-  
+
   existingUser.avatar = pathAvatar;
   writeDb(db);
   if (oldAvatar && oldAvatar.includes('/uploads/')) {

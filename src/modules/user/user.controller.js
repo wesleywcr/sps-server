@@ -2,7 +2,7 @@ const userService = require('./user.service');
 
 
 function registerUser(req, res) {
-  const user = userService.registerUser(req.body);
+  const user = userService.registerUser(req.body,req.file);
   res.status(201).json(user);
 }
 
